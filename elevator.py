@@ -3,12 +3,13 @@ import logging
 import aioconsole
 from queue import Queue
 
+from models import FloorRequest
+
 logging.basicConfig(
     level=logging.NOTSET,
     format='%(levelname)s:%(message)s'
 )
 logger = logging.getLogger()
-FLOORS = [i for i in range(10)]
 
 class Elevator():
     max_weight: int
@@ -25,10 +26,10 @@ class Elevator():
         self.max_weight = max_weight
         self.max_heads = max_heads
     
-    async def go_to_floor(self, queue):
+    async def run(self, queue: Queue[FloorRequest]):
         while True:
             if not queue.empty():
-                floor = queue.get()
+                floor = queue.get().level
                 print(f"Going to floor: {floor}")
                 await asyncio.sleep(5)
                 print(f"Movement complete to: {floor}")
@@ -46,7 +47,7 @@ async def main():
     elevator = Elevator(1200, 10)
     input = InputCollector()
     queue = Queue()
-    elevator_task = asyncio.create_task(elevator.go_to_floor(queue))
+    elevator_task = asyncio.create_task(elevator.run(queue))
     collector_task = asyncio.create_task(input.collector(queue))
     await asyncio.gather(elevator_task, collector_task)
 
