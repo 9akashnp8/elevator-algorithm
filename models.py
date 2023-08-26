@@ -1,7 +1,8 @@
 from pydantic import BaseModel
 
 class FloorRequest(BaseModel):
-    level: int
+    destination_level: int
+    current_level: int
 
 class RequestID(BaseModel):
     request_id: str
