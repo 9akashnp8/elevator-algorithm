@@ -9,6 +9,8 @@ packages = [{include = "elevator_algorithm"}]
 [tool.poetry.dependencies]
 python = "^3.11"
 aioconsole = "^0.6.2"
+fastapi = "^0.102.0"
+uvicorn = {extras = ["standard"], version = "^0.23.2"}
 
 
 [build-system]
