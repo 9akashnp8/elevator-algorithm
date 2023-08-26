@@ -16,6 +16,10 @@ class Response(BaseModel):
     message: str
     body: Any = None
 
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(elevator.run(queue))
+
 @app.get("/")
 def get_root() -> Response:
     return Response(
