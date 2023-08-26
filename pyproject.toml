@@ -8,6 +8,7 @@ packages = [{include = "elevator_algorithm"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
+aioconsole = "^0.6.2"
 
 
 [build-system]

@@ -1,5 +1,7 @@
-import time
+import asyncio
 import logging
+import aioconsole
+from queue import Queue
 
 logging.basicConfig(
     level=logging.NOTSET,
@@ -23,25 +25,30 @@ class Elevator():
         self.max_weight = max_weight
         self.max_heads = max_heads
     
-    def go_to_floor(self, floor):
-        loop_increment = direction = 1
-        if floor < self.curr_floor: loop_increment = direction -1
-        self.destination_floor = floor
-        logger.info(f"currently on: {self.curr_floor}, moving to {self.destination_floor}")
+    async def go_to_floor(self, queue):
+        while True:
+            if not queue.empty():
+                floor = queue.get()
+                print(f"Going to floor: {floor}")
+                await asyncio.sleep(5)
+                print(f"Movement complete to: {floor}")
+            await asyncio.sleep(0.5)
 
-        for i in range(self.curr_floor, self.destination_floor+loop_increment, direction):
-            time.sleep(1)
-            self.curr_floor = i
-            logger.info(f"currently on: {self.curr_floor}")
-        
-        logger.info("movement complete")
+class InputCollector():
 
-def main():
+    async def collector(self, queue):
+        while True:
+            user_input = await aioconsole.ainput("Enter a request: \n")
+            queue.put(user_input)
+            await asyncio.sleep(0.2)
+
+async def main():
     elevator = Elevator(1200, 10)
-    while True:
-        destination_floor = int(input("Input Destination Floor: "))
-        elevator.go_to_floor(destination_floor)
+    input = InputCollector()
+    queue = Queue()
+    elevator_task = asyncio.create_task(elevator.go_to_floor(queue))
+    collector_task = asyncio.create_task(input.collector(queue))
+    await asyncio.gather(elevator_task, collector_task)
 
 if __name__ == '__main__':
-    main()
-
+    asyncio.run(main())
