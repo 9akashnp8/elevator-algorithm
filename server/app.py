@@ -1,6 +1,7 @@
 import asyncio
 from typing import Any
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from queue import Queue
 
@@ -10,6 +11,17 @@ from elevator import Elevator
 app = FastAPI()
 elevator = Elevator(1200, 20)
 queue: Queue[RequestID] = Queue()
+origins = [
+    "http://localhost:5173",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 class Response(BaseModel):
     status: str
