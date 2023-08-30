@@ -1,8 +1,36 @@
+import json
 import asyncio
-from queue import Queue
+import redis
 
 from models import FloorRequest
 from utils import initial_req_msg
+
+class Queue():
+    """simeple wrapper around Redis,
+    uses Redis Lists to implement
+    a "Queue"
+    """
+    connection = redis.Redis()
+
+    @property
+    def has_unprocessed_requests(self):
+        return self.connection.llen(f"temp_{self.name}")
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    def len(self):
+        return self.connection.llen(self.name)
+
+    def enqueue(self, request: dict):
+        value = json.dumps(request)
+        self.connection.lpush(self.name, value)
+
+    def dequeue(self) -> dict:
+        return json.loads(self.connection.rpoplpush(self.name, f"temp_{self.name}"))
+
+    def dequeue_temp(self) -> dict:
+        return json.loads(self.connection.rpop(f"temp_{self.name}"))
 
 class Elevator():
     max_weight: int
@@ -30,11 +58,18 @@ class Elevator():
         self.curr_floor = destination_floor
         print("Reached destination", destination_floor)
     
-    async def run(self, queue: Queue[FloorRequest]):
+    async def run(self, queue: Queue):
         while True:
-            if not queue.empty():
-                curr_item = queue.get()
-                destination_level = curr_item.destination_level
-                req_from = curr_item.current_level
+            floor_request = {}
+            if queue.has_unprocessed_requests:
+                floor_request = queue.dequeue_temp()
+            elif queue.len():
+                floor_request = queue.dequeue()
+
+            if floor_request:
+                destination_level = floor_request.get('destination_level')
+                req_from = floor_request.get('current_level')
                 await self.go_to_floor(req_from, destination_level)
+                queue.dequeue_temp()
+
             await asyncio.sleep(0.5)

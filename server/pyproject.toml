@@ -4,13 +4,13 @@ version = "0.1.0"
 description = "algorithm that simulates a general purpose elevator"
 authors = ["Akash NP <akashnp1998@gmail.com>"]
 readme = "README.md"
-packages = [{include = "elevator_algorithm"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
 aioconsole = "^0.6.2"
 fastapi = "^0.102.0"
 uvicorn = {extras = ["standard"], version = "^0.23.2"}
+redis = "^5.0.0"
 
 
 [build-system]
