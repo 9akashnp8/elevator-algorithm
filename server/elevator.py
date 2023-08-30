@@ -1,7 +1,8 @@
+import json
 import asyncio
 import logging
 import aioconsole
-from queue import Queue
+import redis
 
 from models import FloorRequest
 from utils import initial_req_msg
@@ -11,6 +12,21 @@ logging.basicConfig(
     format='%(levelname)s:%(message)s'
 )
 logger = logging.getLogger()
+
+class Queue():
+    connection = redis.Redis()
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    def len(self):
+        return self.connection.llen(self.name)
+
+    def enqueue(self, request):
+        self.connection.lpush(self.name, request)
+
+    def dequeue(self):
+        return self.connection.rpop(self.name)
 
 class Elevator():
     max_weight: int
@@ -38,12 +54,12 @@ class Elevator():
         self.curr_floor = destination_floor
         print("Reached destination", destination_floor)
     
-    async def run(self, queue: Queue[FloorRequest]):
+    async def run(self, queue: Queue):
         while True:
-            if not queue.empty():
-                curr_item = queue.get()
-                destination_level = curr_item.destination_level
-                req_from = curr_item.current_level
+            if queue.len():
+                curr_item = json.loads(queue.dequeue(queue.name))
+                destination_level = curr_item.get('destination_level')
+                req_from = curr_item.get('current_level')
                 await self.go_to_floor(req_from, destination_level)
             await asyncio.sleep(0.5)
 

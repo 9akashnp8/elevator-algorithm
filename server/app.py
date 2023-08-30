@@ -1,16 +1,16 @@
+import json
 import asyncio
 from typing import Any
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from queue import Queue
 
 from models import FloorRequest, RequestID
-from elevator import Elevator
+from elevator import Elevator, Queue
 
 app = FastAPI()
 elevator = Elevator(1200, 20)
-queue: Queue[RequestID] = Queue()
+queue: Queue = Queue("floor_requests")
 origins = [
     "http://localhost:5173",
 ]
@@ -41,7 +41,7 @@ def get_root() -> Response:
 
 @app.post("/floor")
 def go_to_floor(body: FloorRequest):
-    queue.put(body)
+    queue.enqueue(json.dumps(body.model_dump()))
     return Response(
         status="success",
         message="request queued",
