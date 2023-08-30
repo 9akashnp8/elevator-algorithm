@@ -14,6 +14,10 @@ logging.basicConfig(
 logger = logging.getLogger()
 
 class Queue():
+    """simeple wrapper around Redis,
+    uses Redis Lists to implement
+    a "Queue"
+    """
     connection = redis.Redis()
 
     def __init__(self, name: str) -> None:
@@ -22,11 +26,12 @@ class Queue():
     def len(self):
         return self.connection.llen(self.name)
 
-    def enqueue(self, request):
-        self.connection.lpush(self.name, request)
+    def enqueue(self, request: dict):
+        value = json.dumps(request)
+        self.connection.lpush(self.name, value)
 
-    def dequeue(self):
-        return self.connection.rpop(self.name)
+    def dequeue(self) -> dict:
+        return json.loads(self.connection.rpop(self.name))
 
 class Elevator():
     max_weight: int
@@ -57,7 +62,7 @@ class Elevator():
     async def run(self, queue: Queue):
         while True:
             if queue.len():
-                curr_item = json.loads(queue.dequeue(queue.name))
+                curr_item = queue.dequeue()
                 destination_level = curr_item.get('destination_level')
                 req_from = curr_item.get('current_level')
                 await self.go_to_floor(req_from, destination_level)

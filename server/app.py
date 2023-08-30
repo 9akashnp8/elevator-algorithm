@@ -41,7 +41,7 @@ def get_root() -> Response:
 
 @app.post("/floor")
 def go_to_floor(body: FloorRequest):
-    queue.enqueue(json.dumps(body.model_dump()))
+    queue.enqueue(body.model_dump())
     return Response(
         status="success",
         message="request queued",
