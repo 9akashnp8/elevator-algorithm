@@ -1,16 +1,8 @@
 import asyncio
-import logging
-import aioconsole
 from queue import Queue
 
 from models import FloorRequest
 from utils import initial_req_msg
-
-logging.basicConfig(
-    level=logging.NOTSET,
-    format='%(levelname)s:%(message)s'
-)
-logger = logging.getLogger()
 
 class Elevator():
     max_weight: int
@@ -46,22 +38,3 @@ class Elevator():
                 req_from = curr_item.current_level
                 await self.go_to_floor(req_from, destination_level)
             await asyncio.sleep(0.5)
-
-class InputCollector():
-
-    async def collector(self, queue):
-        while True:
-            user_input = await aioconsole.ainput("Enter a request: \n")
-            queue.put(user_input)
-            await asyncio.sleep(0.2)
-
-async def main():
-    elevator = Elevator(1200, 10)
-    input = InputCollector()
-    queue = Queue()
-    elevator_task = asyncio.create_task(elevator.run(queue))
-    collector_task = asyncio.create_task(input.collector(queue))
-    await asyncio.gather(elevator_task, collector_task)
-
-if __name__ == '__main__':
-    asyncio.run(main())
