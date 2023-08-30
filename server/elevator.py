@@ -12,6 +12,10 @@ class Queue():
     """
     connection = redis.Redis()
 
+    @property
+    def has_unprocessed_requests(self):
+        return self.connection.llen(f"temp_{self.name}")
+
     def __init__(self, name: str) -> None:
         self.name = name
 
@@ -23,7 +27,10 @@ class Queue():
         self.connection.lpush(self.name, value)
 
     def dequeue(self) -> dict:
-        return json.loads(self.connection.rpop(self.name))
+        return json.loads(self.connection.rpoplpush(self.name, f"temp_{self.name}"))
+
+    def dequeue_temp(self) -> dict:
+        return json.loads(self.connection.rpop(f"temp_{self.name}"))
 
 class Elevator():
     max_weight: int
@@ -53,9 +60,16 @@ class Elevator():
     
     async def run(self, queue: Queue):
         while True:
-            if queue.len():
-                curr_item = queue.dequeue()
-                destination_level = curr_item.get('destination_level')
-                req_from = curr_item.get('current_level')
+            floor_request = {}
+            if queue.has_unprocessed_requests:
+                floor_request = queue.dequeue_temp()
+            elif queue.len():
+                floor_request = queue.dequeue()
+
+            if floor_request:
+                destination_level = floor_request.get('destination_level')
+                req_from = floor_request.get('current_level')
                 await self.go_to_floor(req_from, destination_level)
+                queue.dequeue_temp()
+
             await asyncio.sleep(0.5)
