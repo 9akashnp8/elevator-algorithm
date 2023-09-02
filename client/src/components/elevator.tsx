@@ -1,20 +1,19 @@
+import { useContext } from "react";
 import { animated, useSpring } from "@react-spring/web";
 
-export default function Elevator() {
-    const [ springs, api ] = useSpring(() => ({
-        from: { bottom: 0 }
-    }))
+import { AppContext } from "./state/context";
 
-    function handleClick() {
-        api.start({
-            from: { bottom: 0 },
-            to: { bottom: 100 }
-        })
-    }
+export default function Elevator() {
+    const { state } = useContext(AppContext)
+    const floorBreakPoint = Math.round(window.innerHeight / 10)
+
+    const springs = useSpring({
+        from: { bottom: 0 },
+        to: { bottom: state.toFloor! * floorBreakPoint }
+    })
 
     return (
         <animated.div
-            onClick={handleClick}
             style={{
                 position: 'absolute',
                 left: '50%',
