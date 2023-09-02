@@ -1,12 +1,9 @@
-import { useState } from 'react'
-
 import '@/styles/global.css'
 import FloorInputGrid from './components/ui/floorInputGrid'
 import ElevatorUpdatesBox from './components/ui/elevatorUpdatesBox'
 import Elevator from './components/elevator'
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
     <main className='flex justify-between h-screen'>
