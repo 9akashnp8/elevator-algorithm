@@ -1,7 +1,7 @@
 import json
 import asyncio
 from typing import Any
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -55,3 +55,14 @@ def get_current_queue():
         message="",
         body=[item for item in queue.queue]
     )
+
+@app.websocket("/ws")
+async def elevator_websocket(websocket: WebSocket):
+    elevator.link_websocket(websocket)
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_text()
+        if data:
+            queue.enqueue(json.loads(data))
+        else:
+            await websocket.send_text("Empty Request")

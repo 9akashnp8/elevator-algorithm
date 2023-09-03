@@ -11,6 +11,7 @@ aioconsole = "^0.6.2"
 fastapi = "^0.102.0"
 uvicorn = {extras = ["standard"], version = "^0.23.2"}
 redis = "^5.0.0"
+websockets = "^11.0.3"
 
 
 [build-system]

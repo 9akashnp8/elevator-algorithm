@@ -1,6 +1,7 @@
 import json
 import asyncio
 import redis
+from fastapi import WebSocket
 
 from models import FloorRequest
 from utils import initial_req_msg
@@ -38,6 +39,7 @@ class Elevator():
     is_running: bool
     curr_floor: int = 0
     destination_floor: int
+    websocket: WebSocket = None
 
     def __init__(
         self,
@@ -47,25 +49,33 @@ class Elevator():
         self.max_weight = max_weight
         self.max_heads = max_heads
 
+    def link_websocket(self, websocket: WebSocket):
+        self.websocket = websocket
+
+    def prepare_floor_request(self, queue: Queue):
+        floor_request = {}
+        if queue.has_unprocessed_requests:
+            floor_request = queue.dequeue_temp()
+        elif queue.len():
+            floor_request = queue.dequeue()
+        return floor_request
+
     async def go_to_floor(self, req_from, destination_floor):
-        print(initial_req_msg(destination_floor, req_from, self.curr_floor))
+        await self.websocket.send_text(
+            initial_req_msg(destination_floor, req_from, self.curr_floor))
         if self.curr_floor != req_from:
-            print(f"Now going to: {req_from}")
+            await self.websocket.send_text(f"Now going to: {req_from}")
             await asyncio.sleep(5)
             self.curr_floor = req_from
-            print(f"Reached {req_from}, going to {destination_floor}")
+            await self.websocket.send_text(f"Reached {req_from}, going to {destination_floor}")
         await asyncio.sleep(5)
         self.curr_floor = destination_floor
-        print("Reached destination", destination_floor)
+        await self.websocket.send_text(f"Reached destination: {destination_floor}")
     
     async def run(self, queue: Queue):
         while True:
-            floor_request = {}
-            if queue.has_unprocessed_requests:
-                floor_request = queue.dequeue_temp()
-            elif queue.len():
-                floor_request = queue.dequeue()
-
+            floor_request = self.prepare_floor_request(queue)
+            
             if floor_request:
                 destination_level = floor_request.get('destination_level')
                 req_from = floor_request.get('current_level')
