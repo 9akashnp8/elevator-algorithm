@@ -61,17 +61,23 @@ class Elevator():
         return floor_request
 
     async def go_to_floor(self, req_from, destination_floor):
-        await self.websocket.send_text(
-            initial_req_msg(destination_floor, req_from, self.curr_floor))
-        if self.curr_floor != req_from:
-            await self.websocket.send_text(f"Now going to: {req_from}")
-            await asyncio.sleep(5)
-            self.curr_floor = req_from
-            await self.websocket.send_text(f"Reached {req_from}, going to {destination_floor}")
-        await asyncio.sleep(5)
-        self.curr_floor = destination_floor
-        await self.websocket.send_text(f"Reached destination: {destination_floor}")
-    
+        direction = step = 1
+        await self.websocket.send_json({"action": "initiated", "current": self.curr_floor})
+
+        if req_from != self.curr_floor:
+            for i in range(self.curr_floor+1, req_from+1):
+                await asyncio.sleep(1)
+                self.curr_floor = i
+                await self.websocket.send_json({"action": "moving", "current": i})
+
+        if destination_floor < self.curr_floor: direction = step = -1
+        for j in range(self.curr_floor + step, destination_floor + step, direction):
+            await asyncio.sleep(1)
+            self.curr_floor = j
+            await self.websocket.send_json({"action": "moving", "current": j})
+
+        await self.websocket.send_json({"action": "complete", "current": self.curr_floor})
+
     async def run(self, queue: Queue):
         while True:
             floor_request = self.prepare_floor_request(queue)
