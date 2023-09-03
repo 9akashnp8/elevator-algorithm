@@ -1,4 +1,5 @@
-import { useContext } from "react"
+import { useContext, useState, useEffect, useCallback } from "react"
+import { useWebSocket } from "react-use-websocket/dist/lib/use-websocket";
 
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,22 +13,29 @@ type Props = {
 
 export default function FloorInputGrid({ numberOfFloors }: Props) {
     const { dispatch } = useContext(AppContext)
+    const [ messages, setMessages ] = useState<string[]>([])
 
-    function handleClick(e: any) {
-        dispatch({
-            type: ActionTypes.GoToFloor,
-            payload: {
-                fromFloor: 0, // get current floor from state once movement complete
-                toFloor: +e.target.value
-            }
-        })
-    }
+    const { sendMessage, lastMessage } = useWebSocket('ws://127.0.0.1:8000/ws');
+
+    useEffect(() => {
+        if (lastMessage !== null) {
+            setMessages((prev) => prev.concat(lastMessage.data))
+        }
+    }, [lastMessage, setMessages])
+
+    const handleClickSendMessage = useCallback((e: any) => 
+        sendMessage(JSON.stringify({
+            "destination_level": e.target.value,
+            "current_level": 11
+        })),
+        []
+    );
 
     return (
         <div className="grid grid-cols-3 gap-y-5 justify-items-center">
             {[...Array(numberOfFloors)].map((_, i) =>
                 <Card>
-                    <Button size={"lg"} value={i} onClick={handleClick} >
+                    <Button size={"lg"} value={+i} onClick={handleClickSendMessage} >
                         {i}
                     </Button>
                 </Card>
