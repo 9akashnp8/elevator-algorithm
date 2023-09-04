@@ -1,31 +1,59 @@
 import { createContext, useReducer, Dispatch } from "react";
 
-import { AppReducer, ReducerActions } from "./reducer";
+import {
+    FloorRequestReducer,
+    CurrentFloorReducer,
+    FloorRequestActions,
+    CurrentFloorActions,
+} from "./reducer";
 
 type FCWithChildrenType = {
     children: React.ReactNode
 }
 
-type InitialStateType = {
+export type FloorRequestType = {
     fromFloor: number | null,
-    toFloor: number | null
+    toFloor: number | null,
+}
+
+type InitialStateType = {
+    floorRequest: FloorRequestType
+    currentFloor: number,
 }
 
 const initialState: InitialStateType = {
-    fromFloor: null,
-    toFloor: null
+    floorRequest: {
+        fromFloor: 0,
+        toFloor: 0
+    },
+    currentFloor: 0
 }
 
 const AppContext = createContext<{
     state: InitialStateType;
-    dispatch: Dispatch<ReducerActions>;
+    dispatch: Dispatch<FloorRequestActions | CurrentFloorActions>;
 }>({
     state: initialState,
     dispatch: () => null
 });
 
+const mainReducer = (
+    {floorRequest, currentFloor}: InitialStateType,
+    action: FloorRequestActions | CurrentFloorActions
+) => {
+    console.info(`
+        ----STATE-UPDATE----
+        ${JSON.stringify(floorRequest)}
+        ${currentFloor}
+    `)
+    return {
+        floorRequest: FloorRequestReducer(floorRequest, action),
+        currentFloor: CurrentFloorReducer(currentFloor, action)
+    }
+}
+
 const AppContextProvider = ({ children }: FCWithChildrenType) => {
-    const [ state, dispatch ] = useReducer(AppReducer, initialState)
+    const [ state, dispatch ] = useReducer(mainReducer, initialState)
 
     return (
         <AppContext.Provider value={{ state, dispatch }}>
