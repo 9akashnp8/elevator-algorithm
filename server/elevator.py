@@ -61,6 +61,7 @@ class Elevator():
         return floor_request
 
     async def go_to_floor(self, req_from, destination_floor):
+        if not self.websocket: return
         direction = step = 1
         await self.websocket.send_json({"action": "initiated", "current": self.curr_floor})
 
