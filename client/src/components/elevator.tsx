@@ -9,7 +9,7 @@ export default function Elevator() {
 
     const springs = useSpring({
         from: { bottom: 0 },
-        to: { bottom: state.toFloor! * floorBreakPoint }
+        to: { bottom: state.currentFloor! * floorBreakPoint }
     })
 
     return (
