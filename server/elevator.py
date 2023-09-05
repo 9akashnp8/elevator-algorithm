@@ -20,9 +20,6 @@ class Queue():
     def __init__(self, name: str) -> None:
         self.name = name
 
-    def len(self):
-        return self.connection.llen(self.name)
-
     def enqueue(self, request: dict):
         value = json.dumps(request)
         self.connection.lpush(self.name, value)
@@ -33,6 +30,8 @@ class Queue():
                 return json.loads(self.connection.rpop(f"temp_{self.name}"))
             return json.loads(self.connection.rpoplpush(self.name, f"temp_{self.name}"))
     
+    def remove_from_temp(self):
+        self.connection.rpop(f"temp_{self.name}")
 
 class Elevator():
     max_weight: int
@@ -80,6 +79,6 @@ class Elevator():
                 destination_level = floor_request.get('destination_level')
                 req_from = floor_request.get('current_level')
                 await self.go_to_floor(req_from, destination_level)
-                queue.dequeue_temp()
+                queue.remove_from_temp()
 
             await asyncio.sleep(0.5)
