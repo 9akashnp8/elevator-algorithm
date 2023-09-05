@@ -14,13 +14,13 @@ class Queue():
     connection = redis.Redis()
 
     @property
-    def has_unprocessed_requests(self):
-        return self.connection.llen(f"temp_{self.name}")
+    def has_unprocessed_requests(self) -> bool:
+        return bool(self.connection.llen(f"temp_{self.name}"))
 
     def __init__(self, name: str) -> None:
         self.name = name
 
-    def enqueue(self, request: dict):
+    def enqueue(self, request: dict) -> None:
         value = json.dumps(request)
         self.connection.lpush(self.name, value)
 
@@ -30,7 +30,7 @@ class Queue():
                 return json.loads(self.connection.rpop(f"temp_{self.name}"))
             return json.loads(self.connection.rpoplpush(self.name, f"temp_{self.name}"))
     
-    def remove_from_temp(self):
+    def remove_from_temp(self) -> None:
         self.connection.rpop(f"temp_{self.name}")
 
 class Elevator():
@@ -49,10 +49,10 @@ class Elevator():
         self.max_weight = max_weight
         self.max_heads = max_heads
 
-    def link_websocket(self, websocket: WebSocket):
+    def link_websocket(self, websocket: WebSocket) -> None:
         self.websocket = websocket
 
-    async def go_to_floor(self, req_from, destination_floor):
+    async def go_to_floor(self, req_from: int, destination_floor: int) -> None:
         if not self.websocket: return
         direction = step = 1
         await self.websocket.send_json({"action": "initiated", "current": self.curr_floor})
@@ -71,7 +71,7 @@ class Elevator():
 
         await self.websocket.send_json({"action": "complete", "current": self.curr_floor})
 
-    async def run(self, queue: Queue):
+    async def run(self, queue: Queue) -> None:
         while True:
             floor_request = queue.dequeue()
             
