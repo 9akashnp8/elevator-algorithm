@@ -28,10 +28,11 @@ class Queue():
         self.connection.lpush(self.name, value)
 
     def dequeue(self) -> dict:
-        return json.loads(self.connection.rpoplpush(self.name, f"temp_{self.name}"))
-
-    def dequeue_temp(self) -> dict:
-        return json.loads(self.connection.rpop(f"temp_{self.name}"))
+        if self.connection.llen(self.name):
+            if self.has_unprocessed_requests:
+                return json.loads(self.connection.rpop(f"temp_{self.name}"))
+            return json.loads(self.connection.rpoplpush(self.name, f"temp_{self.name}"))
+    
 
 class Elevator():
     max_weight: int
@@ -51,14 +52,6 @@ class Elevator():
 
     def link_websocket(self, websocket: WebSocket):
         self.websocket = websocket
-
-    def prepare_floor_request(self, queue: Queue):
-        floor_request = {}
-        if queue.has_unprocessed_requests:
-            floor_request = queue.dequeue_temp()
-        elif queue.len():
-            floor_request = queue.dequeue()
-        return floor_request
 
     async def go_to_floor(self, req_from, destination_floor):
         if not self.websocket: return
@@ -81,7 +74,7 @@ class Elevator():
 
     async def run(self, queue: Queue):
         while True:
-            floor_request = self.prepare_floor_request(queue)
+            floor_request = queue.dequeue()
             
             if floor_request:
                 destination_level = floor_request.get('destination_level')
