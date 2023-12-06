@@ -3,8 +3,10 @@ import { createContext, useReducer, Dispatch } from "react";
 import {
     FloorRequestReducer,
     CurrentFloorReducer,
+    UserFloorReducer,
     FloorRequestActions,
     CurrentFloorActions,
+    UserFloorActions
 } from "./reducer";
 
 type FCWithChildrenType = {
@@ -19,6 +21,7 @@ export type FloorRequestType = {
 type InitialStateType = {
     floorRequest: FloorRequestType
     currentFloor: number,
+    userFloor: number,
 }
 
 const initialState: InitialStateType = {
@@ -26,29 +29,32 @@ const initialState: InitialStateType = {
         fromFloor: 0,
         toFloor: 0
     },
-    currentFloor: 0
+    currentFloor: 0,
+    userFloor: 0,
 }
 
 const AppContext = createContext<{
     state: InitialStateType;
-    dispatch: Dispatch<FloorRequestActions | CurrentFloorActions>;
+    dispatch: Dispatch<FloorRequestActions | CurrentFloorActions | UserFloorActions>;
 }>({
     state: initialState,
     dispatch: () => null
 });
 
 const mainReducer = (
-    {floorRequest, currentFloor}: InitialStateType,
-    action: FloorRequestActions | CurrentFloorActions
+    {floorRequest, currentFloor, userFloor}: InitialStateType,
+    action: FloorRequestActions | CurrentFloorActions | UserFloorActions
 ) => {
     console.info(`
         ----STATE-UPDATE----
         ${JSON.stringify(floorRequest)}
         ${currentFloor}
+        ${userFloor}
     `)
     return {
         floorRequest: FloorRequestReducer(floorRequest, action),
-        currentFloor: CurrentFloorReducer(currentFloor, action)
+        currentFloor: CurrentFloorReducer(currentFloor, action),
+        userFloor: UserFloorReducer(userFloor, action)
     }
 }
 

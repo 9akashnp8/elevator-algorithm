@@ -15,6 +15,7 @@ type ActionMap<M extends { [index: string]: any }> = {
 export enum ActionTypes {
     GoToFloor = 'GO_TO_FLOOR',
     SetCurrentFloor = 'SET_CURRENT_FLOOR',
+    SetUserFloor = 'SET_USER_FLOOR',
 }
 
 // --- Floor Request ---
@@ -24,7 +25,7 @@ type FloorRequestPayload = {
 
 export type FloorRequestActions = ActionMap<FloorRequestPayload>[keyof ActionMap<FloorRequestPayload>]
 
-export const FloorRequestReducer = (state: FloorRequestType, action: FloorRequestActions | CurrentFloorActions) => {
+export const FloorRequestReducer = (state: FloorRequestType, action: FloorRequestActions | CurrentFloorActions | UserFloorActions) => {
     switch (action.type) {
         case ActionTypes.GoToFloor:
             return {
@@ -44,9 +45,25 @@ type CurrentFloorPayload = {
 
 export type CurrentFloorActions = ActionMap<CurrentFloorPayload>[keyof ActionMap<CurrentFloorPayload>]
 
-export const CurrentFloorReducer = (state: number, action: FloorRequestActions | CurrentFloorActions) => {
+export const CurrentFloorReducer = (state: number, action: FloorRequestActions | CurrentFloorActions | UserFloorActions) => {
     switch (action.type) {
         case ActionTypes.SetCurrentFloor:
+            return action.payload
+        default:
+            return state
+    }
+}
+
+// --- User Floor ---
+type UserFloorPayload = {
+    [ActionTypes.SetUserFloor]: number
+}
+
+export type UserFloorActions = ActionMap<UserFloorPayload>[keyof ActionMap<UserFloorPayload>]
+
+export const UserFloorReducer = (state: number, action: FloorRequestActions | CurrentFloorActions | UserFloorActions) => {
+    switch (action.type) {
+        case ActionTypes.SetUserFloor:
             return action.payload
         default:
             return state

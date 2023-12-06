@@ -22,8 +22,12 @@ export default function Elevator() {
                 height: 80,
                 background: '#ff6d6d',
                 borderRadius: 8,
+                display: 'grid',
+                placeItems: 'center',
                 ...springs
             }}
-        />
+        >
+            <p className="text-2xl text-white font-bold" >{state.currentFloor}</p>
+        </animated.div>
     )
 }
